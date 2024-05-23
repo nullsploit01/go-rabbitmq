@@ -37,3 +37,7 @@ func (rc RabbitClient) CreateQueue(queueName string, durable, autoDelete bool) e
 
 	return err
 }
+
+func (rc RabbitClient) CreateBinding(name, binding, exchange string) error {
+	return rc.channel.QueueBind(name, binding, exchange, false, nil)
+}

@@ -32,6 +32,14 @@ func main() {
 		panic(err)
 	}
 
+	if err := client.CreateBinding("customers_created", "customers.created.*", "customer_events"); err != nil {
+		panic(err)
+	}
+
+	if err := client.CreateBinding("customers_test", "customers.*", "customer_events"); err != nil {
+		panic(err)
+	}
+
 	time.Sleep(10 * time.Second)
 	log.Println(client)
 }
