@@ -1,9 +1,12 @@
 package main
 
 import (
+	"context"
 	"log"
+	"time"
 
 	"github.com/nullsploit01/go-rabbitmq/internal"
+	"golang.org/x/sync/errgroup"
 )
 
 func main() {
@@ -28,20 +31,33 @@ func main() {
 		panic(err)
 	}
 
-	var blocking chan struct{}
+	var blocker chan struct{}
+
+	ctx := context.Background()
+	ctx, cancel := context.WithTimeout(ctx, 15*time.Second)
+	defer cancel()
+
+	g, _ := errgroup.WithContext(ctx)
+
+	g.SetLimit(10)
 
 	go func() {
 		for message := range messageBus {
-			log.Printf("New Message: %v\n", message)
+			msg := message
+			g.Go(func() error {
+				// log.Printf("New message: %v", msg)
 
-			if err := message.Ack(false); err != nil {
-				log.Println("Message acknowledgement failed.")
-				continue
-			}
+				if err := msg.Ack(false); err != nil {
+					log.Println("Message acknowledgement failed")
+					return err
+				}
 
-			log.Printf("Message %s Acknowledged\n", message.MessageId)
+				log.Printf("Acknowledged message: %s\n", msg.Body)
+
+				return nil
+			})
 		}
 	}()
 
-	<-blocking
+	<-blocker
 }

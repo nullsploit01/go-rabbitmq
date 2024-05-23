@@ -45,26 +45,25 @@ func main() {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	if err := client.Send(ctx, "customer_events", "customers.created.Persistent", amqp091.Publishing{
-		ContentType:  "text/plain",
-		DeliveryMode: amqp091.Persistent,
-		Body:         []byte("Some Persistent test message"),
-	}); err != nil {
-		panic(err)
+	for i := 0; i < 10; i++ {
+		if err := client.Send(ctx, "customer_events", "customers.created.Persistent", amqp091.Publishing{
+			ContentType:  "text/plain",
+			DeliveryMode: amqp091.Persistent,
+			Body:         []byte("Some Persistent test message"),
+		}); err != nil {
+			panic(err)
+		}
+
+		log.Println("Persistent Message sent")
+
+		if err := client.Send(ctx, "customer_events", "customers.created.Transient", amqp091.Publishing{
+			ContentType:  "text/plain",
+			DeliveryMode: amqp091.Transient,
+			Body:         []byte("Some Transient test message"),
+		}); err != nil {
+			panic(err)
+		}
+
+		log.Println("Transient Message sent")
 	}
-
-	log.Println("Persistent Message sent")
-
-	if err := client.Send(ctx, "customer_events", "customers.created.Transient", amqp091.Publishing{
-		ContentType:  "text/plain",
-		DeliveryMode: amqp091.Transient,
-		Body:         []byte("Some Transient test message"),
-	}); err != nil {
-		panic(err)
-	}
-
-	log.Println("Transient Message sent")
-
-	time.Sleep(100 * time.Second)
-	log.Println(client)
 }
