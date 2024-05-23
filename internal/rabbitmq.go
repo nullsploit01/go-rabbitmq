@@ -31,3 +31,9 @@ func NewRabbitMQClient(conn *amqp091.Connection) (RabbitClient, error) {
 func (rc RabbitClient) Close() error {
 	return rc.channel.Close()
 }
+
+func (rc RabbitClient) CreateQueue(queueName string, durable, autoDelete bool) error {
+	_, err := rc.channel.QueueDeclare(queueName, durable, autoDelete, false, false, nil)
+
+	return err
+}
