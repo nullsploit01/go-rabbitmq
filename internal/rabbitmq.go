@@ -46,3 +46,7 @@ func (rc RabbitClient) CreateBinding(name, binding, exchange string) error {
 func (rc RabbitClient) Send(ctx context.Context, exchange, routingKey string, options amqp091.Publishing) error {
 	return rc.channel.PublishWithContext(ctx, exchange, routingKey, true, false, options)
 }
+
+func (rc RabbitClient) Consume(queue, consumer string, autoAck bool) (<-chan amqp091.Delivery, error) {
+	return rc.channel.Consume(queue, consumer, autoAck, false, false, false, nil)
+}
