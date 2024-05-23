@@ -23,6 +23,10 @@ func NewRabbitMQClient(conn *amqp091.Connection) (RabbitClient, error) {
 		return RabbitClient{}, err
 	}
 
+	if err := ch.Confirm(false); err != nil {
+		return RabbitClient{}, err
+	}
+
 	return RabbitClient{
 		conn:    conn,
 		channel: ch,
@@ -44,7 +48,14 @@ func (rc RabbitClient) CreateBinding(name, binding, exchange string) error {
 }
 
 func (rc RabbitClient) Send(ctx context.Context, exchange, routingKey string, options amqp091.Publishing) error {
-	return rc.channel.PublishWithContext(ctx, exchange, routingKey, true, false, options)
+	conf, err := rc.channel.PublishWithDeferredConfirmWithContext(ctx, exchange, routingKey, true, false, options)
+
+	if err != nil {
+		return err
+	}
+
+	conf.Wait()
+	return nil
 }
 
 func (rc RabbitClient) Consume(queue, consumer string, autoAck bool) (<-chan amqp091.Delivery, error) {
