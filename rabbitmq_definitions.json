@@ -1,0 +1,65 @@
+{
+  "users": [
+    {
+      "name": "hardy",
+      "password_hash": "7eC/jX4shXKgExGkshaLKdYsmDFZ1MV91wnvnR2HJS5OljXH",
+      "tags": "administrator"
+    }
+  ],
+  "vhosts": [
+    {
+      "name": "/"
+    },
+    {
+      "name": "customers"
+    }
+  ],
+  "permissions": [
+    {
+      "user": "hardy",
+      "vhost": "customers",
+      "configure": ".*",
+      "write": ".*",
+      "read": ".*"
+    }
+  ],
+  "exchanges": [
+    {
+      "name": "customer_events",
+      "vhost": "customers",
+      "type": "fanout",
+      "durable": true,
+      "auto_delete": false,
+      "internal": false,
+      "arguments": {}
+    },
+    {
+      "name": "customer_callbacks",
+      "vhost": "customers",
+      "type": "direct",
+      "durable": true,
+      "auto_delete": false,
+      "internal": false,
+      "arguments": {}
+    }
+  ],
+  "queues": [
+    {
+      "name": "customers_created",
+      "vhost": "customers",
+      "durable": true,
+      "auto_delete": false,
+      "arguments": {}
+    }
+  ],
+  "bindings": [
+    {
+      "source": "customers_created",
+      "vhost": "customers",
+      "destination": "customers_created",
+      "destination_type": "queue",
+      "routing_key": "customers_created.*",
+      "arguments": {}
+    }
+  ]
+}
