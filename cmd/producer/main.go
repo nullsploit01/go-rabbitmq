@@ -11,12 +11,18 @@ import (
 )
 
 func main() {
-	publishConnection, err := internal.ConnectRabbitMQ("hardy", "password", "localhost:5672", "customers")
+	publishConnection, err := internal.ConnectRabbitMQ("hardy", "password", "localhost:5671", "customers",
+		"/home/nullsploit/projects/portfolio/go-rabbitmq/tls-gen/basic/result/ca_certificate.pem",
+		"/home/nullsploit/projects/portfolio/go-rabbitmq/tls-gen/basic/result/client_poseidon_certificate.pem",
+		"/home/nullsploit/projects/portfolio/go-rabbitmq/tls-gen/basic/result/client_poseidon_key.pem")
 	if err != nil {
 		panic(err)
 	}
 
-	consumeConnection, err := internal.ConnectRabbitMQ("hardy", "password", "localhost:5672", "customers")
+	consumeConnection, err := internal.ConnectRabbitMQ("hardy", "password", "localhost:5671", "customers",
+		"/home/nullsploit/projects/portfolio/go-rabbitmq/tls-gen/basic/result/ca_certificate.pem",
+		"/home/nullsploit/projects/portfolio/go-rabbitmq/tls-gen/basic/result/client_poseidon_certificate.pem",
+		"/home/nullsploit/projects/portfolio/go-rabbitmq/tls-gen/basic/result/client_poseidon_key.pem")
 	if err != nil {
 		panic(err)
 	}
