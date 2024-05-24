@@ -3,6 +3,7 @@ package internal
 import (
 	"context"
 	"fmt"
+	"log"
 
 	"github.com/rabbitmq/amqp091-go"
 )
@@ -37,10 +38,14 @@ func (rc RabbitClient) Close() error {
 	return rc.channel.Close()
 }
 
-func (rc RabbitClient) CreateQueue(queueName string, durable, autoDelete bool) error {
-	_, err := rc.channel.QueueDeclare(queueName, durable, autoDelete, false, false, nil)
+func (rc RabbitClient) CreateQueue(queueName string, durable, autoDelete bool) (amqp091.Queue, error) {
+	queue, err := rc.channel.QueueDeclare(queueName, durable, autoDelete, false, false, nil)
 
-	return err
+	if err != nil {
+		return amqp091.Queue{}, err
+	}
+
+	return queue, nil
 }
 
 func (rc RabbitClient) CreateBinding(name, binding, exchange string) error {
@@ -54,7 +59,7 @@ func (rc RabbitClient) Send(ctx context.Context, exchange, routingKey string, op
 		return err
 	}
 
-	conf.Wait()
+	log.Println(conf.Wait())
 	return nil
 }
 

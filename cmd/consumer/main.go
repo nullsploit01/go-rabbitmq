@@ -26,7 +26,17 @@ func main() {
 
 	defer client.Close()
 
-	messageBus, err := client.Consume("customers_created", "email-service", false)
+	queue, err := client.CreateQueue("", true, false)
+
+	if err != nil {
+		panic(err)
+	}
+
+	if err := client.CreateBinding(queue.Name, "", "customer_events"); err != nil {
+		panic(err)
+	}
+
+	messageBus, err := client.Consume(queue.Name, "email-service", false)
 	if err != nil {
 		panic(err)
 	}
