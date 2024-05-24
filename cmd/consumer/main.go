@@ -27,12 +27,22 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+
+	if err := consumerClient.ApplyQos(10, 0, true); err != nil {
+		panic(err)
+	}
+
 	defer consumerClient.Close()
 
 	publisherClient, err := internal.NewRabbitMQClient(publisherConnection)
 	if err != nil {
 		panic(err)
 	}
+
+	if err := publisherClient.ApplyQos(10, 0, true); err != nil {
+		panic(err)
+	}
+
 	defer publisherClient.Close()
 
 	queue, err := consumerClient.CreateQueue("", true, false)
