@@ -6,37 +6,46 @@ import (
 	"time"
 
 	"github.com/nullsploit01/go-rabbitmq/internal"
+	"github.com/rabbitmq/amqp091-go"
 	"golang.org/x/sync/errgroup"
 )
 
 func main() {
-	conn, err := internal.ConnectRabbitMQ("hardy", "password", "localhost:5672", "customers")
+	consumerConnection, err := internal.ConnectRabbitMQ("hardy", "password", "localhost:5672", "customers")
+	if err != nil {
+		panic(err)
+	}
+	defer consumerConnection.Close()
+
+	publisherConnection, err := internal.ConnectRabbitMQ("hardy", "password", "localhost:5672", "customers")
+	if err != nil {
+		panic(err)
+	}
+	defer publisherConnection.Close()
+
+	consumerClient, err := internal.NewRabbitMQClient(consumerConnection)
+	if err != nil {
+		panic(err)
+	}
+	defer consumerClient.Close()
+
+	publisherClient, err := internal.NewRabbitMQClient(publisherConnection)
+	if err != nil {
+		panic(err)
+	}
+	defer publisherClient.Close()
+
+	queue, err := consumerClient.CreateQueue("", true, false)
 
 	if err != nil {
 		panic(err)
 	}
 
-	defer conn.Close()
-
-	client, err := internal.NewRabbitMQClient(conn)
-
-	if err != nil {
+	if err := consumerClient.CreateBinding(queue.Name, "", "customer_events"); err != nil {
 		panic(err)
 	}
 
-	defer client.Close()
-
-	queue, err := client.CreateQueue("", true, false)
-
-	if err != nil {
-		panic(err)
-	}
-
-	if err := client.CreateBinding(queue.Name, "", "customer_events"); err != nil {
-		panic(err)
-	}
-
-	messageBus, err := client.Consume(queue.Name, "email-service", false)
+	messageBus, err := consumerClient.Consume(queue.Name, "email-service", false)
 	if err != nil {
 		panic(err)
 	}
@@ -59,6 +68,15 @@ func main() {
 
 				if err := msg.Ack(false); err != nil {
 					log.Println("Message acknowledgement failed")
+					return err
+				}
+
+				if err := publisherClient.Send(ctx, "customer_callbacks", msg.ReplyTo, amqp091.Publishing{
+					ContentType:   "plain/tetx",
+					DeliveryMode:  amqp091.Persistent,
+					Body:          []byte("RPC Callback message"),
+					CorrelationId: msg.CorrelationId,
+				}); err != nil {
 					return err
 				}
 
